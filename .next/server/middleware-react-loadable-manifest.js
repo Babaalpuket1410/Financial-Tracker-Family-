@@ -1,0 +1,1 @@
+self.__REACT_LOADABLE_MANIFEST="{\"app\\\\(dashboard)\\\\transactions\\\\page.tsx -> @/lib/currencies\":{\"id\":\"app\\\\(dashboard)\\\\transactions\\\\page.tsx -> @/lib/currencies\",\"files\":[]}}"
