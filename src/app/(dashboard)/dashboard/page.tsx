@@ -21,7 +21,7 @@ export default async function DashboardPage() {
   // This month transactions for the whole family
   const { data: transactions } = await supabase
     .from("transactions")
-    .select("*, profiles(full_name)")
+    .select("*")
     .eq("family_id", familyId)
     .gte("date", `${year}-${String(month).padStart(2, "0")}-01`)
     .lte("date", `${year}-${String(month).padStart(2, "0")}-31`);
@@ -101,7 +101,7 @@ export default async function DashboardPage() {
                 <div key={tx.id} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
                   <div>
                     <p className="text-sm font-medium text-gray-800">{tx.description || "Tanpa keterangan"}</p>
-                    <p className="text-xs text-gray-400">{(tx as any).profiles?.full_name} · {tx.date}</p>
+                    <p className="text-xs text-gray-400">{tx.date}</p>
                   </div>
                   <span className={`text-sm font-semibold ${tx.type === "income" ? "text-green-600" : "text-red-600"}`}>
                     {tx.type === "income" ? "+" : "-"}{formatIDR(tx.amount_idr)}

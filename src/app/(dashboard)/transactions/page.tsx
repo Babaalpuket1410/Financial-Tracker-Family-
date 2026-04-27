@@ -38,7 +38,7 @@ export default function TransactionsPage() {
     const [{ data: txs }, { data: cats }] = await Promise.all([
       supabase
         .from("transactions")
-        .select("*, categories(name, icon, color), profiles(full_name)")
+        .select("*, categories(name, icon, color)")
         .eq("family_id", profile.family_id)
         .order("date", { ascending: false })
         .order("created_at", { ascending: false })
@@ -141,7 +141,7 @@ export default function TransactionsPage() {
                 <span className="text-2xl">{(tx as any).categories?.icon ?? "💸"}</span>
                 <div>
                   <p className="text-sm font-medium text-gray-800">{tx.description || (tx as any).categories?.name || "Transaksi"}</p>
-                  <p className="text-xs text-gray-400">{(tx as any).profiles?.full_name} · {tx.date}</p>
+                  <p className="text-xs text-gray-400">{tx.date}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
