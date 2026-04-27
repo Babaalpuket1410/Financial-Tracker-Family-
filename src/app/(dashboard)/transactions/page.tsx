@@ -73,16 +73,15 @@ export default function TransactionsPage() {
     const { toIDR } = await import("@/lib/currencies");
     const amount_idr = toIDR(Number(form.amount), form.currency);
 
-    const { error: insertError } = await supabase.from("transactions").insert({
-      user_id: user.id,
-      family_id: profile.family_id,
-      amount: Number(form.amount),
-      currency: form.currency,
-      amount_idr,
-      category_id: form.category_id || null,
-      description: form.description || null,
-      date: form.date,
-      type: form.type,
+    const { error: insertError } = await supabase.rpc("insert_transaction", {
+      p_family_id: profile.family_id,
+      p_amount: Number(form.amount),
+      p_currency: form.currency,
+      p_amount_idr: amount_idr,
+      p_category_id: form.category_id || null,
+      p_description: form.description || null,
+      p_date: form.date,
+      p_type: form.type,
     });
 
     if (insertError) {
