@@ -45,12 +45,13 @@ export default function RemindersPage() {
     e.preventDefault();
     setSubmitting(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) { setSubmitting(false); return; }
     const { data: profile } = await supabase.from("profiles").select("family_id").eq("id", user.id).single();
+    if (!profile?.family_id) { setSubmitting(false); return; }
 
-    await supabase.from("reminders").insert({
+    const { error } = await supabase.from("reminders").insert({
       user_id: user.id,
-      family_id: profile?.family_id,
+      family_id: profile.family_id,
       title: form.title,
       amount: form.amount ? Number(form.amount) : null,
       currency: form.currency,
@@ -58,9 +59,11 @@ export default function RemindersPage() {
       recurring: form.recurring,
     });
 
-    setForm({ title: "", amount: "", currency: "IDR", due_date: "", recurring: "none" });
-    setShowForm(false);
-    loadData();
+    if (!error) {
+      setForm({ title: "", amount: "", currency: "IDR", due_date: "", recurring: "none" });
+      setShowForm(false);
+      loadData();
+    }
     setSubmitting(false);
   }
 

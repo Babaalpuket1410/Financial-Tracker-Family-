@@ -52,11 +52,12 @@ export default function BudgetPage() {
     e.preventDefault();
     setSubmitting(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) { setSubmitting(false); return; }
     const { data: profile } = await supabase.from("profiles").select("family_id").eq("id", user.id).single();
+    if (!profile?.family_id) { setSubmitting(false); return; }
 
-    await supabase.from("budgets").upsert({
-      family_id: profile?.family_id,
+    const { error } = await supabase.from("budgets").upsert({
+      family_id: profile.family_id,
       user_id: form.scope === "personal" ? user.id : null,
       category_id: form.category_id,
       amount: Number(form.amount),
@@ -65,9 +66,11 @@ export default function BudgetPage() {
       year,
     }, { onConflict: "family_id,category_id,month,year,user_id" });
 
-    setForm({ category_id: "", amount: "", currency: "IDR", scope: "personal" });
-    setShowForm(false);
-    loadData();
+    if (!error) {
+      setForm({ category_id: "", amount: "", currency: "IDR", scope: "personal" });
+      setShowForm(false);
+      loadData();
+    }
     setSubmitting(false);
   }
 

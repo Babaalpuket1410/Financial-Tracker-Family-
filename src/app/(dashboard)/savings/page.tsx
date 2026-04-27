@@ -40,12 +40,13 @@ export default function SavingsPage() {
     e.preventDefault();
     setSubmitting(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) { setSubmitting(false); return; }
     const { data: profile } = await supabase.from("profiles").select("family_id").eq("id", user.id).single();
+    if (!profile?.family_id) { setSubmitting(false); return; }
 
-    await supabase.from("savings_goals").insert({
+    const { error } = await supabase.from("savings_goals").insert({
       user_id: user.id,
-      family_id: profile?.family_id,
+      family_id: profile.family_id,
       name: form.name,
       target_amount: Number(form.target_amount),
       current_amount: 0,
@@ -53,9 +54,11 @@ export default function SavingsPage() {
       deadline: form.deadline || null,
     });
 
-    setForm({ name: "", target_amount: "", currency: "IDR", deadline: "", scope: "personal" });
-    setShowForm(false);
-    loadData();
+    if (!error) {
+      setForm({ name: "", target_amount: "", currency: "IDR", deadline: "", scope: "personal" });
+      setShowForm(false);
+      loadData();
+    }
     setSubmitting(false);
   }
 
