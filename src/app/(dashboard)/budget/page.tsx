@@ -32,7 +32,7 @@ export default function BudgetPage() {
       supabase.from("categories").select("*").eq("family_id", profile.family_id).eq("type", "expense"),
       supabase.from("transactions").select("category_id, amount_idr").eq("family_id", profile.family_id).eq("type", "expense")
         .gte("date", `${year}-${String(month).padStart(2, "0")}-01`)
-        .lte("date", `${year}-${String(month).padStart(2, "0")}-31`),
+        .lt("date", `${month === 12 ? year + 1 : year}-${String(month === 12 ? 1 : month + 1).padStart(2, "0")}-01`),
     ]);
 
     const spent: Record<string, number> = {};

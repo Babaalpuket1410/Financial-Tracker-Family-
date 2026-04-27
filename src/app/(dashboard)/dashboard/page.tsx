@@ -9,6 +9,8 @@ export default async function DashboardPage() {
   if (!user) return null;
 
   const { month, year } = getCurrentMonth();
+  const nextMonth = month === 12 ? 1 : month + 1;
+  const nextYear = month === 12 ? year + 1 : year;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -24,7 +26,7 @@ export default async function DashboardPage() {
     .select("*")
     .eq("family_id", familyId)
     .gte("date", `${year}-${String(month).padStart(2, "0")}-01`)
-    .lte("date", `${year}-${String(month).padStart(2, "0")}-31`);
+    .lt("date", `${nextYear}-${String(nextMonth).padStart(2, "0")}-01`);
 
   const totalIncome = transactions?.filter((t) => t.type === "income").reduce((s, t) => s + t.amount_idr, 0) ?? 0;
   const totalExpense = transactions?.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount_idr, 0) ?? 0;
