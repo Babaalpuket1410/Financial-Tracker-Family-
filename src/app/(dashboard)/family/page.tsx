@@ -123,7 +123,7 @@ export default function FamilyPage() {
           </div>
           <div>
             <label className="label">Email</label>
-            <input type="email" className="input" value={currentUser?.email} disabled className="input bg-gray-50 text-gray-400 cursor-not-allowed" />
+            <input type="email" className="input bg-gray-50 text-gray-400 cursor-not-allowed" value={currentUser?.email} disabled />
           </div>
           <button type="submit" className="btn-primary" disabled={saving}>Simpan Profil</button>
         </form>
