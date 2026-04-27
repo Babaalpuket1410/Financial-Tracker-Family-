@@ -57,18 +57,17 @@ export default function RegisterPage() {
         return;
       }
     } else {
-      // Join existing family
-      const { data: family, error: familyError } = await supabase
-        .from("families")
-        .select("id, name")
-        .eq("id", inviteCode.trim())
-        .single();
+      // Join existing family via SECURITY DEFINER function
+      const { data: familyData, error: familyError } = await supabase
+        .rpc("get_family_by_invite", { p_family_id: inviteCode.trim() });
 
-      if (familyError || !family) {
+      if (familyError || !familyData || familyData.length === 0) {
         setError("Kode undangan tidak valid. Pastikan kode yang dimasukkan benar.");
         setLoading(false);
         return;
       }
+
+      const family = familyData[0];
 
       const { error: joinError } = await supabase
         .from("profiles")
