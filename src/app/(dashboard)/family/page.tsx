@@ -94,15 +94,19 @@ export default function FamilyPage() {
   }
 
   async function handleChangeRole(memberId: string, newRole: "admin" | "member") {
-    await supabase.from("profiles").update({ role: newRole }).eq("id", memberId);
+    await supabase.rpc("change_member_role", { p_member_id: memberId, p_new_role: newRole });
     loadData();
   }
 
   async function handleKickMember(memberId: string, memberName: string) {
     if (!confirm(`Keluarkan ${memberName} dari keluarga? Mereka tidak bisa melihat data keluarga lagi.`)) return;
     setSaving(true);
-    await supabase.from("profiles").update({ family_id: null, role: "member" }).eq("id", memberId);
-    setMessage(`${memberName} berhasil dikeluarkan dari keluarga.`);
+    const { error } = await supabase.rpc("kick_family_member", { p_member_id: memberId });
+    if (error) {
+      setMessage("Gagal mengeluarkan anggota: " + error.message);
+    } else {
+      setMessage(`${memberName} berhasil dikeluarkan dari keluarga.`);
+    }
     setSaving(false);
     setTimeout(() => setMessage(""), 3000);
     loadData();
