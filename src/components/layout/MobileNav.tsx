@@ -11,6 +11,7 @@ const navItems = [
   { href: "/reports", label: "Laporan", icon: "📈" },
   { href: "/savings", label: "Tabungan", icon: "🏦" },
   { href: "/reminders", label: "Tagihan", icon: "🔔" },
+  { href: "/categories", label: "Kategori", icon: "🗂️" },
   { href: "/family", label: "Keluarga", icon: "👨‍👩‍👧" },
 ];
 
