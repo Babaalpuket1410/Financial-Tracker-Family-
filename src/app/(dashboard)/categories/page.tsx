@@ -117,11 +117,9 @@ export default function CategoriesPage() {
         <h1 className="text-2xl font-bold text-gray-900">Kategori</h1>
         {isAdmin && (
           <div className="flex gap-2">
-            {categories.length === 0 && (
-              <button onClick={handleSeedDefaults} disabled={seedingDefaults} className="btn-secondary text-sm">
-                {seedingDefaults ? "Menambahkan..." : "✨ Tambah Default"}
-              </button>
-            )}
+            <button onClick={handleSeedDefaults} disabled={seedingDefaults} className="btn-secondary text-sm">
+              {seedingDefaults ? "Menambahkan..." : "✨ Tambah Default"}
+            </button>
             <button onClick={() => setShowForm(true)} className="btn-primary">+ Tambah</button>
           </div>
         )}
