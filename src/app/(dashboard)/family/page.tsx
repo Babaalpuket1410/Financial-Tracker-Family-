@@ -98,6 +98,16 @@ export default function FamilyPage() {
     loadData();
   }
 
+  async function handleKickMember(memberId: string, memberName: string) {
+    if (!confirm(`Keluarkan ${memberName} dari keluarga? Mereka tidak bisa melihat data keluarga lagi.`)) return;
+    setSaving(true);
+    await supabase.from("profiles").update({ family_id: null, role: "member" }).eq("id", memberId);
+    setMessage(`${memberName} berhasil dikeluarkan dari keluarga.`);
+    setSaving(false);
+    setTimeout(() => setMessage(""), 3000);
+    loadData();
+  }
+
   async function handleDeleteFamily() {
     if (!confirm(`Hapus keluarga "${(profile as any)?.families?.name}"? Semua data transaksi, budget, tabungan, dan tagihan keluarga akan ikut terhapus. Tindakan ini tidak bisa dibatalkan.`)) return;
     setSaving(true);
@@ -188,12 +198,20 @@ export default function FamilyPage() {
                     </span>
                   </div>
                   {profile.role === "admin" && m.id !== currentUser?.id && (
-                    <button
-                      onClick={() => handleChangeRole(m.id, m.role === "admin" ? "member" : "admin")}
-                      className="text-xs text-primary-600 hover:underline"
-                    >
-                      {m.role === "admin" ? "Jadikan Anggota" : "Jadikan Admin"}
-                    </button>
+                    <div className="flex gap-3 items-center">
+                      <button
+                        onClick={() => handleChangeRole(m.id, m.role === "admin" ? "member" : "admin")}
+                        className="text-xs text-primary-600 hover:underline"
+                      >
+                        {m.role === "admin" ? "Jadikan Anggota" : "Jadikan Admin"}
+                      </button>
+                      <button
+                        onClick={() => handleKickMember(m.id, m.full_name)}
+                        className="text-xs text-red-500 hover:underline"
+                      >
+                        Keluarkan
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
