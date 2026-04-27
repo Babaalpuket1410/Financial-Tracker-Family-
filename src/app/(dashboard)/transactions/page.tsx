@@ -25,6 +25,7 @@ export default function TransactionsPage() {
     date: new Date().toISOString().split("T")[0],
   });
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -57,18 +58,24 @@ export default function TransactionsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
+    setSubmitError("");
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) { setSubmitting(false); return; }
 
     const { data: profile } = await supabase.from("profiles").select("family_id").eq("id", user.id).single();
+    if (!profile?.family_id) {
+      setSubmitError("Profil tidak memiliki keluarga. Pastikan akun sudah terhubung ke keluarga.");
+      setSubmitting(false);
+      return;
+    }
 
     const { toIDR } = await import("@/lib/currencies");
     const amount_idr = toIDR(Number(form.amount), form.currency);
 
-    await supabase.from("transactions").insert({
+    const { error: insertError } = await supabase.from("transactions").insert({
       user_id: user.id,
-      family_id: profile?.family_id,
+      family_id: profile.family_id,
       amount: Number(form.amount),
       currency: form.currency,
       amount_idr,
@@ -77,6 +84,12 @@ export default function TransactionsPage() {
       date: form.date,
       type: form.type,
     });
+
+    if (insertError) {
+      setSubmitError("Gagal menyimpan: " + insertError.message);
+      setSubmitting(false);
+      return;
+    }
 
     setForm({ type: "expense", amount: "", currency: "IDR", category_id: "", description: "", date: new Date().toISOString().split("T")[0] });
     setShowForm(false);
@@ -228,6 +241,7 @@ export default function TransactionsPage() {
                 />
               </div>
 
+              {submitError && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{submitError}</p>}
               <div className="flex gap-2 pt-2">
                 <button type="button" onClick={() => setShowForm(false)} className="btn-secondary flex-1">Batal</button>
                 <button type="submit" className="btn-primary flex-1" disabled={submitting}>
