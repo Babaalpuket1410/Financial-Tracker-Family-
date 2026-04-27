@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
+type Mode = "new" | "join";
+
 export default function RegisterPage() {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>("new");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [familyName, setFamilyName] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +37,7 @@ export default function RegisterPage() {
       return;
     }
 
-    // Sign in immediately to get a valid session
+    // Sign in immediately to get valid session
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     if (signInError) {
       setError("Akun dibuat tapi gagal login otomatis. Coba masuk manual.");
@@ -41,42 +45,45 @@ export default function RegisterPage() {
       return;
     }
 
-    // Create family via secure function
-    const { data: familyId, error: familyError } = await supabase
-      .rpc("create_family_for_user", { family_name: familyName });
+    if (mode === "new") {
+      // Create new family
+      const { error: familyError } = await supabase.rpc("create_family_for_user", {
+        family_name: familyName,
+      });
 
-    if (familyError) {
-      setError("Gagal membuat keluarga: " + familyError.message);
-      setLoading(false);
-      return;
+      if (familyError) {
+        setError("Gagal membuat keluarga: " + familyError.message);
+        setLoading(false);
+        return;
+      }
+    } else {
+      // Join existing family
+      const { data: family, error: familyError } = await supabase
+        .from("families")
+        .select("id, name")
+        .eq("id", inviteCode.trim())
+        .single();
+
+      if (familyError || !family) {
+        setError("Kode undangan tidak valid. Pastikan kode yang dimasukkan benar.");
+        setLoading(false);
+        return;
+      }
+
+      const { error: joinError } = await supabase
+        .from("profiles")
+        .update({ family_id: family.id, role: "member" })
+        .eq("id", data.user.id);
+
+      if (joinError) {
+        setError("Gagal bergabung ke keluarga: " + joinError.message);
+        setLoading(false);
+        return;
+      }
     }
-
-    // Seed default categories
-    await seedDefaultCategories(supabase, familyId);
 
     router.push("/dashboard");
     router.refresh();
-  }
-
-  async function seedDefaultCategories(supabase: ReturnType<typeof createClient>, familyId: string) {
-    const categories = [
-      { name: "Gaji", type: "income", icon: "💼", color: "#22c55e" },
-      { name: "Freelance", type: "income", icon: "💻", color: "#16a34a" },
-      { name: "Investasi", type: "income", icon: "📈", color: "#15803d" },
-      { name: "Lainnya (Pemasukan)", type: "income", icon: "💰", color: "#166534" },
-      { name: "Makan & Minum", type: "expense", icon: "🍽️", color: "#f97316" },
-      { name: "Transport", type: "expense", icon: "🚗", color: "#f59e0b" },
-      { name: "Belanja", type: "expense", icon: "🛒", color: "#8b5cf6" },
-      { name: "Kesehatan", type: "expense", icon: "🏥", color: "#ef4444" },
-      { name: "Pendidikan", type: "expense", icon: "📚", color: "#3b82f6" },
-      { name: "Hiburan", type: "expense", icon: "🎮", color: "#ec4899" },
-      { name: "Tagihan", type: "expense", icon: "📄", color: "#6b7280" },
-      { name: "Lainnya (Pengeluaran)", type: "expense", icon: "💸", color: "#9ca3af" },
-    ];
-
-    await supabase.from("categories").insert(
-      categories.map((c) => ({ ...c, family_id: familyId }))
-    );
   }
 
   return (
@@ -85,70 +92,65 @@ export default function RegisterPage() {
         <div className="text-center mb-6">
           <div className="text-4xl mb-2">💰</div>
           <h1 className="text-2xl font-bold text-gray-900">Daftar Akun</h1>
-          <p className="text-sm text-gray-500 mt-1">Buat akun dan keluarga baru</p>
+        </div>
+
+        {/* Mode Toggle */}
+        <div className="flex gap-2 mb-5 bg-gray-100 rounded-lg p-1">
+          <button
+            type="button"
+            onClick={() => setMode("new")}
+            className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${mode === "new" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"}`}
+          >
+            Buat Keluarga Baru
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("join")}
+            className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${mode === "join" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"}`}
+          >
+            Gabung Keluarga
+          </button>
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
             <label className="label">Nama Lengkap</label>
-            <input
-              type="text"
-              className="input"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              placeholder="Budi Santoso"
-            />
-          </div>
-          <div>
-            <label className="label">Nama Keluarga</label>
-            <input
-              type="text"
-              className="input"
-              value={familyName}
-              onChange={(e) => setFamilyName(e.target.value)}
-              required
-              placeholder="Keluarga Santoso"
-            />
-          </div>
-          <div>
-            <label className="label">Email</label>
-            <input
-              type="email"
-              className="input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="nama@email.com"
-            />
-          </div>
-          <div>
-            <label className="label">Password</label>
-            <input
-              type="password"
-              className="input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="Min. 6 karakter"
-              minLength={6}
-            />
+            <input type="text" className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} required placeholder="Nama lengkap" />
           </div>
 
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+          {mode === "new" ? (
+            <div>
+              <label className="label">Nama Keluarga</label>
+              <input type="text" className="input" value={familyName} onChange={(e) => setFamilyName(e.target.value)} required placeholder="Keluarga Santoso" />
+            </div>
+          ) : (
+            <div>
+              <label className="label">Kode Undangan</label>
+              <input type="text" className="input" value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} required placeholder="Paste kode dari admin keluarga" />
+              <p className="text-xs text-gray-400 mt-1">Minta kode dari admin keluarga di menu Keluarga → Kode Undangan</p>
+            </div>
           )}
 
+          <div>
+            <label className="label">Email</label>
+            <input type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="nama@email.com" />
+          </div>
+
+          <div>
+            <label className="label">Password</label>
+            <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Min. 6 karakter" minLength={6} />
+          </div>
+
+          {error && <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? "Mendaftar..." : "Daftar"}
+            {loading ? "Memproses..." : mode === "new" ? "Daftar & Buat Keluarga" : "Daftar & Gabung Keluarga"}
           </button>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-4">
           Sudah punya akun?{" "}
-          <Link href="/login" className="text-primary-600 font-medium hover:underline">
-            Masuk
-          </Link>
+          <Link href="/login" className="text-primary-600 font-medium hover:underline">Masuk</Link>
         </p>
       </div>
     </div>
