@@ -98,6 +98,18 @@ export default function FamilyPage() {
     loadData();
   }
 
+  async function handleDeleteFamily() {
+    if (!confirm(`Hapus keluarga "${(profile as any)?.families?.name}"? Semua data transaksi, budget, tabungan, dan tagihan keluarga akan ikut terhapus. Tindakan ini tidak bisa dibatalkan.`)) return;
+    setSaving(true);
+    const { error } = await supabase.rpc("delete_family_for_user");
+    if (error) {
+      setMessage("Gagal menghapus keluarga: " + error.message);
+    } else {
+      window.location.href = "/dashboard";
+    }
+    setSaving(false);
+  }
+
   if (loading) return <div className="p-6 text-center text-gray-400">Memuat...</div>;
 
   return (
@@ -187,6 +199,21 @@ export default function FamilyPage() {
               ))}
             </div>
           </div>
+
+          {/* Danger Zone */}
+          {profile.role === "admin" && (
+            <div className="card border border-red-200">
+              <h2 className="font-semibold text-red-600 mb-1">Zona Berbahaya</h2>
+              <p className="text-xs text-gray-500 mb-3">Menghapus keluarga akan menghapus semua data transaksi, budget, tabungan, dan tagihan secara permanen.</p>
+              <button
+                onClick={handleDeleteFamily}
+                disabled={saving}
+                className="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
+              >
+                🗑️ Hapus Keluarga
+              </button>
+            </div>
+          )}
         </>
       ) : (
         /* Join Family */
