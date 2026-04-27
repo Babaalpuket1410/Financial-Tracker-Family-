@@ -31,7 +31,7 @@ export default function RemindersPage() {
 
     const { data } = await supabase
       .from("reminders")
-      .select("*, profiles(full_name)")
+      .select("*")
       .eq("family_id", profile.family_id)
       .order("due_date");
 
@@ -160,7 +160,7 @@ export default function RemindersPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400">{(r as any).profiles?.full_name} · {r.due_date}</p>
+                  <p className="text-xs text-gray-400">{r.due_date}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {r.amount && (

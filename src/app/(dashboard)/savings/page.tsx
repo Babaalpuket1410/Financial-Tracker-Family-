@@ -26,7 +26,7 @@ export default function SavingsPage() {
 
     const { data } = await supabase
       .from("savings_goals")
-      .select("*, profiles(full_name)")
+      .select("*")
       .eq("family_id", profile.family_id)
       .order("created_at", { ascending: false });
 
@@ -106,7 +106,7 @@ export default function SavingsPage() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="font-semibold text-gray-800">{g.name}</h3>
-                    <p className="text-xs text-gray-400">{(g as any).profiles?.full_name}</p>
+                    <p className="text-xs text-gray-400"></p>
                     {g.deadline && <p className="text-xs text-gray-400">Target: {g.deadline}</p>}
                   </div>
                   <div className="flex gap-1">
